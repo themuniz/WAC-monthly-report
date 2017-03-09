@@ -5,6 +5,7 @@ wac_monthly_report.py
 Create an excel document with the WAC interactions for the month
 """
 import glob
+import os
 import sys
 
 import openpyxl
@@ -12,6 +13,16 @@ import pandas as pd
 
 ALL_DATA = pd.DataFrame()
 CONTACT_FILE = glob.glob('../data/*.xlsx')
+
+
+def setup(directories):
+    """Check if necessary directories exist, and create them if needed"""
+    for d in directories:
+        if not os.path.exists(os.path.join('../', d)):
+            os.makedirs(os.path.join('../', d))
+
+
+setup(['data', 'output'])
 
 if len(CONTACT_FILE) == 1:
     pass
@@ -34,4 +45,5 @@ for s in sheets:
     ALL_DATA = ALL_DATA.append(df, ignore_index=True)
 
 print('{} interactions.'.format(len(ALL_DATA)))
+
 ALL_DATA.to_excel('../output/wac_monthly_report.xlsx')
