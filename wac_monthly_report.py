@@ -18,8 +18,9 @@ CONTACT_FILE = glob.glob('../data/*.xlsx')
 def setup(directories):
     """Check if necessary directories exist, and create them if needed"""
     for d in directories:
-        if not os.path.exists(os.path.join('../', d)):
-            os.makedirs(os.path.join('../', d))
+        d = os.path.join('./', d)
+        if not os.path.exists(d):
+            os.makedirs(os.path.join(d))
 
 
 setup(['data', 'output'])
