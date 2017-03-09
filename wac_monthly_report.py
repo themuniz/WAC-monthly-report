@@ -12,7 +12,7 @@ import openpyxl
 import pandas as pd
 
 ALL_DATA = pd.DataFrame()
-CONTACT_FILE = glob.glob('../data/*.xlsx')
+CONTACT_FILE = glob.glob('./data/*.xlsx')
 
 
 def setup(directories):
@@ -47,4 +47,4 @@ for s in sheets:
 
 print('{} interactions.'.format(len(ALL_DATA)))
 
-ALL_DATA.to_excel('../output/wac_monthly_report.xlsx')
+ALL_DATA.to_excel('./output/wac_monthly_report.xlsx')
