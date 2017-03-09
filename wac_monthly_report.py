@@ -29,11 +29,15 @@ def clean_records(data_frame):
     """Remove records with missing/invalid dates, dates outside of month,
     and incorrect columns"""
     data_frame = data_frame[pd.notnull(data_frame['Contact Date'])]
-    # TODO: Check for and remove strings in the 'contact date' column
+    # TODO: check for and remove strings in the 'contact date' column
     data_frame['Contact Date'] = pd.to_datetime(
         data_frame['Contact Date'], infer_datetime_format=True)
-    # TODO: Filter by date
-    # TODO: Remove excess columns
+    # TODO: remove hardcoding of dates
+    start_date = '2017-01-01'
+    end_date = TODAY
+    data_frame = data_frame[(data_frame['Contact Date'] > start_date) &
+                            (data_frame['Contact Date'] < end_date)]
+    # TODO: remove excess columns
     return data_frame
 
 
