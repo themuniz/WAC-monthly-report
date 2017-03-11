@@ -5,6 +5,7 @@ wac_monthly_report.py
 Create an excel document with the WAC interactions for the month
 """
 import glob
+import logging
 import os
 import sys
 from datetime import date
@@ -19,10 +20,22 @@ TODAY = date.today()
 
 def setup(directories):
     """Check if necessary directories exist and create them if needed"""
+    logging.info('Starting setup')
     for d in directories:
         d = os.path.join('./', d)
         if not os.path.exists(d):
             os.makedirs(os.path.join(d))
+
+    if len(CONTACT_FILE) == 1:
+        pass
+    elif len(CONTACT_FILE) == 0:
+        logging.critical(
+            'WAC contact history file is missing from the data directory')
+        sys.exit()
+    else:
+        logging.critical(
+            'Multiple WAC contact history files are in the data directory')
+        sys.exit()
 
 
 def clean_records(data_frame, start_date, end_date):
@@ -42,37 +55,40 @@ def clean_records(data_frame, start_date, end_date):
 def main(start_date='2017-01-01', end_date=date.today()):
     """Create WAC student interaction monthly report"""
     setup(['data', 'output'])
+    logging.info('Setup complete')
 
-    if len(CONTACT_FILE) == 1:
-        pass
-    elif len(CONTACT_FILE) == 0:
-        print('WAC contact history file is missing from data folder.')
-        sys.exit()
-    else:
-        print('Multiple WAC contact history files are in the data folder.')
-        sys.exit()
-
+    logging.info('Opening {}'.format(CONTACT_FILE[0]))
     wb = openpyxl.load_workbook(CONTACT_FILE[0])
 
     sheets = wb.sheetnames
     sheets = [x for x in sheets if ',' in x]
 
-    # TODO: move this reporting to after the df is cleaned
-    print('{} students found in total.'.format(len(sheets)))
+    logging.info('{} student worksheets found in {}'.format(
+        len(sheets), CONTACT_FILE[0]))
 
     for s in sheets:
         df = pd.read_excel(CONTACT_FILE[0], sheetname=s)
+        logging.info('Reading worksheet {}'.format(s))
         df['Student Name'] = s
         ALL_DATA = ALL_DATA.append(df, ignore_index=True)
 
-    # TODO: move this reporting to after the df is cleaned
-    print('{} interactions.'.format(len(ALL_DATA)))
+    logging.info(
+        '{} interactions found in {}'.format(len(ALL_DATA), CONTACT_FILE[0]))
 
-    # TODO: remove hardcoding of dates
+    logging.info('Starting to clean records')
     ALL_DATA = clean_records(ALL_DATA, start_date, end_date)
-    ALL_DATA.to_excel('./output/wac_monthly_report-{}.xlsx'.format(TODAY))
+    report_name = 'wac_monthly_report-{}.xlsx'.format(end_date)'
+    logging.info('Writing {} to the output directory'.format(report_name))
+    ALL_DATA.to_excel(os.path.join('./output/', report_name'))
 
 
 if __name__ == '__main__':
     import plac
+    logger = logging.getLogger()
+    handler = logging.StreamHandler()
+    formatter = logging.Formatter(
+        '%(asctime)s %(name)-12s %(levelname)-8s %(message)s')
+    handler.setFormatter(formatter)
+    logger.addHandler(handler)
+    logger.setLevel(logging.INFO)
     plac.call(main)
