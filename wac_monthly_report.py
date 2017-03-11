@@ -18,7 +18,7 @@ TODAY = date.today()
 
 
 def setup(directories):
-    """Check if necessary directories exist, and create them if needed"""
+    """Check if necessary directories exist and create them if needed"""
     for d in directories:
         d = os.path.join('./', d)
         if not os.path.exists(d):
@@ -39,34 +39,40 @@ def clean_records(data_frame, start_date, end_date):
     return data_frame
 
 
-# TODO: refactor what we can into functions and use if _name_ == main()
-setup(['data', 'output'])
+def main(start_date='2017-01-01', end_date=date.today()):
+    """Create WAC student interaction monthly report"""
+    setup(['data', 'output'])
 
-if len(CONTACT_FILE) == 1:
-    pass
-elif len(CONTACT_FILE) == 0:
-    print('WAC contact history file is missing from data folder.')
-    sys.exit()
-else:
-    print('Multiple WAC contact history files are in the data folder.')
-    sys.exit()
+    if len(CONTACT_FILE) == 1:
+        pass
+    elif len(CONTACT_FILE) == 0:
+        print('WAC contact history file is missing from data folder.')
+        sys.exit()
+    else:
+        print('Multiple WAC contact history files are in the data folder.')
+        sys.exit()
 
-wb = openpyxl.load_workbook(CONTACT_FILE[0])
+    wb = openpyxl.load_workbook(CONTACT_FILE[0])
 
-sheets = wb.sheetnames
-sheets = [x for x in sheets if ',' in x]
+    sheets = wb.sheetnames
+    sheets = [x for x in sheets if ',' in x]
 
-# TODO: move this reporting to after the df is cleaned
-print('{} students found in total.'.format(len(sheets)))
+    # TODO: move this reporting to after the df is cleaned
+    print('{} students found in total.'.format(len(sheets)))
 
-for s in sheets:
-    df = pd.read_excel(CONTACT_FILE[0], sheetname=s)
-    df['Student Name'] = s
-    ALL_DATA = ALL_DATA.append(df, ignore_index=True)
+    for s in sheets:
+        df = pd.read_excel(CONTACT_FILE[0], sheetname=s)
+        df['Student Name'] = s
+        ALL_DATA = ALL_DATA.append(df, ignore_index=True)
 
-# TODO: move this reporting to after the df is cleaned
-print('{} interactions.'.format(len(ALL_DATA)))
+    # TODO: move this reporting to after the df is cleaned
+    print('{} interactions.'.format(len(ALL_DATA)))
 
-# TODO: remove hardcoding of dates
-ALL_DATA = clean_records(ALL_DATA, start_date='2017-01-01', end_date=TODAY)
-ALL_DATA.to_excel('./output/wac_monthly_report-{}.xlsx'.format(TODAY))
+    # TODO: remove hardcoding of dates
+    ALL_DATA = clean_records(ALL_DATA, start_date, end_date)
+    ALL_DATA.to_excel('./output/wac_monthly_report-{}.xlsx'.format(TODAY))
+
+
+if __name__ == '__main__':
+    import plac
+    plac.call(main)
