@@ -25,22 +25,21 @@ def setup(directories):
             os.makedirs(os.path.join(d))
 
 
-def clean_records(data_frame):
+def clean_records(data_frame, start_date, end_date):
     """Remove records with missing/invalid dates, dates outside of month,
     and incorrect columns"""
     data_frame = data_frame[pd.notnull(data_frame['Contact Date'])]
+    # TODO: report and log records that have been removed
     # TODO: check for and remove strings in the 'contact date' column
     data_frame['Contact Date'] = pd.to_datetime(
         data_frame['Contact Date'], infer_datetime_format=True)
-    # TODO: remove hardcoding of dates
-    start_date = '2017-01-01'
-    end_date = TODAY
     data_frame = data_frame[(data_frame['Contact Date'] > start_date) &
                             (data_frame['Contact Date'] < end_date)]
     # TODO: remove excess columns
     return data_frame
 
 
+# TODO: refactor what we can into functions and use if _name_ == main()
 setup(['data', 'output'])
 
 if len(CONTACT_FILE) == 1:
@@ -56,6 +55,8 @@ wb = openpyxl.load_workbook(CONTACT_FILE[0])
 
 sheets = wb.sheetnames
 sheets = [x for x in sheets if ',' in x]
+
+# TODO: move this reporting to after the df is cleaned
 print('{} students found in total.'.format(len(sheets)))
 
 for s in sheets:
@@ -63,6 +64,9 @@ for s in sheets:
     df['Student Name'] = s
     ALL_DATA = ALL_DATA.append(df, ignore_index=True)
 
+# TODO: move this reporting to after the df is cleaned
 print('{} interactions.'.format(len(ALL_DATA)))
 
+# TODO: remove hardcoding of dates
+ALL_DATA = clean_records(ALL_DATA, start_date='2017-01-01', end_date=TODAY)
 ALL_DATA.to_excel('./output/wac_monthly_report-{}.xlsx'.format(TODAY))
