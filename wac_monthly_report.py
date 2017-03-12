@@ -48,24 +48,23 @@ def clean_records(data_frame, start_date, end_date):
     data_frame = data_frame[pd.notnull(data_frame['Contact Date'])]
     string_pattern = r'[A-Z][a-z]'
     string_dates = data_frame[data_frame['Contact Date']
-                              .str.match(pattern, na=False)]
+                              .str.match(string_pattern, na=False)]
     for index, row in string_dates.iterrows():
         logging.warning('Invalid information in record {}/{}'
                         .format(index, row['Student Name']))
         logging.info('Removing invalid record')
-        data_frame = data_frame.drop(index[0], axis='rows')
+        data_frame = data_frame.drop(index, axis='rows')
     logging.info('Converting dates')
     data_frame['Contact Date'] = pd.to_datetime(
         data_frame['Contact Date'], infer_datetime_format=True)
-    logging.info('Selecting dates between {} and {}'.format(start_date,
-                                                            end_date))
+    logging.info(
+        'Selecting dates between {} and {}'.format(start_date, end_date))
     data_frame = data_frame[(data_frame['Contact Date'] > start_date) &
                             (data_frame['Contact Date'] < end_date)]
-    logging.info('Found {} interactions with {} students between {} and {}'
-                 .format(len(data_frame),
-                         len(data_frame['Student Name'].unique(),
-                         start_date,
-                         end_date)))
+    logging.info(
+        'Found {} interactions with {} students between {} and {}'.format(
+            len(data_frame),
+            len(data_frame['Student Name'].unique()), start_date, end_date))
     return data_frame
 
 
@@ -74,8 +73,9 @@ def format(data_frame):
     # TODO: remove duplicate and unreported columns
     # TODO: re-order columns
     # TODO: Simple text cleanup
-
     return data_frame
+
+
 def main(start_date='2017-01-01', end_date=date.today()):
     """Create WAC student interaction monthly report"""
     setup(['data', 'output'])
@@ -94,6 +94,7 @@ def main(start_date='2017-01-01', end_date=date.today()):
         df = pd.read_excel(CONTACT_FILE[0], sheetname=s)
         logging.info('Reading worksheet {}'.format(s))
         df['Student Name'] = s
+        global ALL_DATA
         ALL_DATA = ALL_DATA.append(df, ignore_index=True)
 
     logging.info(
@@ -101,13 +102,14 @@ def main(start_date='2017-01-01', end_date=date.today()):
 
     logging.info('Starting to clean records')
     ALL_DATA = clean_records(ALL_DATA, start_date, end_date)
-    report_name = 'wac_monthly_report-{}.xlsx'.format(end_date)'
+    report_name = 'wac_monthly_report-{}.xlsx'.format(end_date)
     logging.info('Writing {} to the output directory'.format(report_name))
-    ALL_DATA.to_excel(os.path.join('./output/', report_name'))
+    ALL_DATA.to_excel(os.path.join('./output/', report_name))
 
 
 if __name__ == '__main__':
     import plac
+    # TODO: Add file logger and simplify formatter
     logger = logging.getLogger()
     handler = logging.StreamHandler()
     formatter = logging.Formatter(
