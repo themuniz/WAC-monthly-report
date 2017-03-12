@@ -83,7 +83,9 @@ def format(data_frame):
         'Student Name':
         'Student',
         'Contact Info':
-        'Student Contact Info'
+        'Student Contact Info',
+        'Professor (only last name)':
+        'Professor',
     })
     data_frame['Student'] = data_frame['Student'].str.strip()
     # TODO: Remove "Same as above" comments
