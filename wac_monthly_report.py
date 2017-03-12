@@ -2,20 +2,20 @@
 """
 wac_monthly_report.py
 
-Create an excel document with the WAC interactions for the month
+Create an excel document with the WAC student interactions for the month
 """
+import argparse
+import datetime
 import glob
 import logging
 import os
 import sys
-from datetime import date
 
 import openpyxl
 import pandas as pd
 
 ALL_DATA = pd.DataFrame()
 CONTACT_FILE = glob.glob('./data/*.xlsx')
-TODAY = date.today()
 
 
 def setup(directories):
@@ -59,8 +59,8 @@ def clean_records(data_frame, start_date, end_date):
         data_frame['Contact Date'], infer_datetime_format=True)
     logging.info(
         'Selecting dates between {} and {}'.format(start_date, end_date))
-    data_frame = data_frame[(data_frame['Contact Date'] > start_date) &
-                            (data_frame['Contact Date'] < end_date)]
+    data_frame = data_frame[(data_frame['Contact Date'] >= start_date) &
+                            (data_frame['Contact Date'] <= end_date)]
     logging.info(
         'Found {} interactions with {} students between {} and {}'.format(
             len(data_frame),
@@ -98,8 +98,10 @@ def format(data_frame):
     return data_frame
 
 
-def main(start_date='2017-01-01', end_date=date.today()):
+def main(start_date, end_date):
     """Create WAC student interaction monthly report"""
+    start_date = datetime.datetime.strptime(start_date, '%Y-%m-%d').date()
+    end_date = datetime.datetime.strptime(end_date, '%Y-%m-%d').date()
     setup(['data', 'output'])
     logging.info('Setup complete')
 
@@ -132,7 +134,6 @@ def main(start_date='2017-01-01', end_date=date.today()):
 
 
 if __name__ == '__main__':
-    import plac
     # TODO: Add file logger and simplify formatter
     logger = logging.getLogger()
     logger.setLevel(logging.DEBUG)
@@ -145,7 +146,7 @@ if __name__ == '__main__':
     logger.addHandler(handler)
 
     handler = logging.FileHandler(
-        'report_log-{}.txt'.format(date.today()),
+        'report_log-{}.txt'.format(datetime.date.today()),
         encoding='utf-8',
         delay='true')
     handler.setLevel(logging.WARNING)
@@ -153,4 +154,12 @@ if __name__ == '__main__':
     handler.setFormatter(formatter)
     logger.addHandler(handler)
 
-    plac.call(main)
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        'start_date',
+        help='Date (inclusive) of the first interaction: YYYY-MM-DD')
+    parser.add_argument(
+        'end_date',
+        help='Date (inclusive) of the last interaction: YYYY-MM-DD')
+    args = parser.parse_args()
+    main(args.start_date, args.end_date)
