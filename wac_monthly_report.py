@@ -2,20 +2,20 @@
 """
 wac_monthly_report.py
 
-Create an excel document with the WAC interactions for the month
+Create an excel document with the WAC student interactions for the month
 """
+import argparse
+import datetime
 import glob
 import logging
 import os
 import sys
-from datetime import date
 
 import openpyxl
 import pandas as pd
 
 ALL_DATA = pd.DataFrame()
 CONTACT_FILE = glob.glob('./data/*.xlsx')
-TODAY = date.today()
 
 
 def setup(directories):
@@ -59,8 +59,8 @@ def clean_records(data_frame, start_date, end_date):
         data_frame['Contact Date'], infer_datetime_format=True)
     logging.info(
         'Selecting dates between {} and {}'.format(start_date, end_date))
-    data_frame = data_frame[(data_frame['Contact Date'] > start_date) &
-                            (data_frame['Contact Date'] < end_date)]
+    data_frame = data_frame[(data_frame['Contact Date'] >= start_date) &
+                            (data_frame['Contact Date'] <= end_date)]
     logging.info(
         'Found {} interactions with {} students between {} and {}'.format(
             len(data_frame),
@@ -70,14 +70,38 @@ def clean_records(data_frame, start_date, end_date):
 
 def format(data_frame):
     """Remove, rename, and re-order columns"""
-    # TODO: remove duplicate and unreported columns
-    # TODO: re-order columns
-    # TODO: Simple text cleanup
+    drop_cols = [x for x in data_frame.columns if '.1' in x]
+    data_frame = data_frame.drop(drop_cols, axis='columns')
+    drop_cols = [
+        'Full Student Name (First Name + Last Name)', 'To', 'From',
+        'Assigned to:'
+    ]
+    data_frame = data_frame.drop(drop_cols, axis='columns')
+    data_frame = data_frame.rename(columns={
+        'Assigned to Writing Fellow':
+        'Writing Fellow',
+        'Correspondence Method':
+        'Type of contact',
+        'Course (only the abbreviated form, e.g. PSY240)':
+        'Course',
+        'Student Name':
+        'Student',
+        'Contact Info':
+        'Student Contact Info'
+    })
+    data_frame['Student'] = data_frame['Student'].str.strip()
+    data_frame = data_frame[[
+        'Contact Date', 'Student', 'Student Contact Info', 'Major', 'Course',
+        'Professor (only last name)', 'Writing Fellow', 'Type of contact',
+        'Content/Topic of the Exchange', 'Actions and/or Follow up'
+    ]]
     return data_frame
 
 
-def main(start_date='2017-01-01', end_date=date.today()):
+def main(start_date, end_date):
     """Create WAC student interaction monthly report"""
+    start_date = datetime.datetime.strptime(start_date, '%Y-%m-%d').date()
+    end_date = datetime.datetime.strptime(end_date, '%Y-%m-%d').date()
     setup(['data', 'output'])
     logging.info('Setup complete')
 
@@ -102,19 +126,40 @@ def main(start_date='2017-01-01', end_date=date.today()):
 
     logging.info('Starting to clean records')
     ALL_DATA = clean_records(ALL_DATA, start_date, end_date)
+    logging.info('Starting to format report')
+    ALL_DATA = format(ALL_DATA)
     report_name = 'wac_monthly_report-{}.xlsx'.format(end_date)
     logging.info('Writing {} to the output directory'.format(report_name))
-    ALL_DATA.to_excel(os.path.join('./output/', report_name))
+    ALL_DATA.to_excel(os.path.join('./output/', report_name), index_label='ID')
 
 
 if __name__ == '__main__':
-    import plac
     # TODO: Add file logger and simplify formatter
     logger = logging.getLogger()
+    logger.setLevel(logging.DEBUG)
+    log_format = '%(asctime)s - %(levelname)-8s %(message)s'
+
     handler = logging.StreamHandler()
-    formatter = logging.Formatter(
-        '%(asctime)s %(name)-12s %(levelname)-8s %(message)s')
+    handler.setLevel(logging.INFO)
+    formatter = logging.Formatter(log_format)
     handler.setFormatter(formatter)
     logger.addHandler(handler)
-    logger.setLevel(logging.INFO)
-    plac.call(main)
+
+    handler = logging.FileHandler(
+        'report_log-{}.txt'.format(datetime.date.today()),
+        encoding='utf-8',
+        delay='true')
+    handler.setLevel(logging.WARNING)
+    formatter = logging.Formatter(log_format)
+    handler.setFormatter(formatter)
+    logger.addHandler(handler)
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        'start_date',
+        help='Date (inclusive) of the first interaction: YYYY-MM-DD')
+    parser.add_argument(
+        'end_date',
+        help='Date (inclusive) of the last interaction: YYYY-MM-DD')
+    args = parser.parse_args()
+    main(args.start_date, args.end_date)
