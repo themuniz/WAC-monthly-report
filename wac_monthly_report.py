@@ -2,7 +2,8 @@
 """
 wac_monthly_report.py
 
-Create an excel document with the WAC student interactions for the month
+Create an excel document with the WAC student interactions for a given period
+of time
 """
 import argparse
 import datetime
@@ -151,7 +152,9 @@ if __name__ == '__main__':
     handler.setFormatter(formatter)
     logger.addHandler(handler)
 
-    parser = argparse.ArgumentParser()
+    parser = argparse.ArgumentParser(
+        description="""Create an excel document with the WAC student interactions
+        for a given period of time""")
     parser.add_argument(
         'start_date',
         help='Date (inclusive) of the first interaction: YYYY-MM-DD')
