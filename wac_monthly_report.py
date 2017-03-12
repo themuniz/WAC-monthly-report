@@ -111,10 +111,22 @@ if __name__ == '__main__':
     import plac
     # TODO: Add file logger and simplify formatter
     logger = logging.getLogger()
+    logger.setLevel(logging.DEBUG)
+    log_format = '%(asctime)s - %(levelname)-8s %(message)s'
+
     handler = logging.StreamHandler()
-    formatter = logging.Formatter(
-        '%(asctime)s %(name)-12s %(levelname)-8s %(message)s')
+    handler.setLevel(logging.INFO)
+    formatter = logging.Formatter(log_format)
     handler.setFormatter(formatter)
     logger.addHandler(handler)
-    logger.setLevel(logging.INFO)
+
+    handler = logging.FileHandler(
+        'report_log-{}.txt'.format(date.today()),
+        encoding='utf-8',
+        delay='true')
+    handler.setLevel(logging.WARNING)
+    formatter = logging.Formatter(log_format)
+    handler.setFormatter(formatter)
+    logger.addHandler(handler)
+
     plac.call(main)
