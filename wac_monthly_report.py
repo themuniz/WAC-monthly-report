@@ -41,17 +41,41 @@ def setup(directories):
 def clean_records(data_frame, start_date, end_date):
     """Remove records with missing/invalid dates, dates outside of month,
     and incorrect columns"""
+    null_dates = data_frame[data_frame['Contact Date'].isnull()]
+    for index, row in null_dates.iterrows():
+        logging.warning('Empty contact date in record {}/{}'
+                        .format(index, row['Student Name']))
     data_frame = data_frame[pd.notnull(data_frame['Contact Date'])]
-    # TODO: report and log records that have been removed
-    # TODO: check for and remove strings in the 'contact date' column
+    string_pattern = r'[A-Z][a-z]'
+    string_dates = data_frame[data_frame['Contact Date']
+                              .str.match(pattern, na=False)]
+    for index, row in string_dates.iterrows():
+        logging.warning('Invalid information in record {}/{}'
+                        .format(index, row['Student Name']))
+        logging.info('Removing invalid record')
+        data_frame = data_frame.drop(index[0], axis='rows')
+    logging.info('Converting dates')
     data_frame['Contact Date'] = pd.to_datetime(
         data_frame['Contact Date'], infer_datetime_format=True)
+    logging.info('Selecting dates between {} and {}'.format(start_date,
+                                                            end_date))
     data_frame = data_frame[(data_frame['Contact Date'] > start_date) &
                             (data_frame['Contact Date'] < end_date)]
-    # TODO: remove excess columns
+    logging.info('Found {} interactions with {} students between {} and {}'
+                 .format(len(data_frame),
+                         len(data_frame['Student Name'].unique(),
+                         start_date,
+                         end_date)))
     return data_frame
 
 
+def format(data_frame):
+    """Remove, rename, and re-order columns"""
+    # TODO: remove duplicate and unreported columns
+    # TODO: re-order columns
+    # TODO: Simple text cleanup
+
+    return data_frame
 def main(start_date='2017-01-01', end_date=date.today()):
     """Create WAC student interaction monthly report"""
     setup(['data', 'output'])
