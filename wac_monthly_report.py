@@ -72,11 +72,6 @@ def format(data_frame):
     """Remove, rename, and re-order columns"""
     drop_cols = [x for x in data_frame.columns if '.1' in x]
     data_frame = data_frame.drop(drop_cols, axis='columns')
-    drop_cols = [
-        'Full Student Name (First Name + Last Name)', 'To', 'From',
-        'Assigned to:'
-    ]
-    data_frame = data_frame.drop(drop_cols, axis='columns')
     data_frame = data_frame.rename(columns={
         'Assigned to Writing Fellow':
         'Writing Fellow',
@@ -90,6 +85,7 @@ def format(data_frame):
         'Student Contact Info'
     })
     data_frame['Student'] = data_frame['Student'].str.strip()
+    # TODO: Remove "Same as above" comments
     data_frame = data_frame[[
         'Contact Date', 'Student', 'Student Contact Info', 'Major', 'Course',
         'Professor (only last name)', 'Writing Fellow', 'Type of contact',
@@ -128,6 +124,7 @@ def main(start_date, end_date):
     ALL_DATA = clean_records(ALL_DATA, start_date, end_date)
     logging.info('Starting to format report')
     ALL_DATA = format(ALL_DATA)
+    # TODO: Rename report to describe dates of query
     report_name = 'wac_monthly_report-{}.xlsx'.format(end_date)
     logging.info('Writing {} to the output directory'.format(report_name))
     ALL_DATA.to_excel(os.path.join('./output/', report_name), index_label='ID')
