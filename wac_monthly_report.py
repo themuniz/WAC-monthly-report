@@ -70,9 +70,31 @@ def clean_records(data_frame, start_date, end_date):
 
 def format(data_frame):
     """Remove, rename, and re-order columns"""
-    # TODO: remove duplicate and unreported columns
-    # TODO: re-order columns
-    # TODO: Simple text cleanup
+    drop_cols = [x for x in data_frame.columns if '.1' in x]
+    data_frame = data_frame.drop(drop_cols, axis='columns')
+    drop_cols = [
+        'Full Student Name (First Name + Last Name)', 'To', 'From',
+        'Assigned to:'
+    ]
+    data_frame = data_frame.drop(drop_cols, axis='columns')
+    data_frame = data_frame.rename(columns={
+        'Assigned to Writing Fellow':
+        'Writing Fellow',
+        'Correspondence Method':
+        'Type of contact',
+        'Course (only the abbreviated form, e.g. PSY240)':
+        'Course',
+        'Student Name':
+        'Student',
+        'Contact Info':
+        'Student Contact Info'
+    })
+    data_frame['Student'] = data_frame['Student'].str.strip()
+    data_frame = data_frame[[
+        'Contact Date', 'Student', 'Student Contact Info', 'Major', 'Course',
+        'Professor (only last name)', 'Writing Fellow', 'Type of contact',
+        'Content/Topic of the Exchange', 'Actions and/or Follow up'
+    ]]
     return data_frame
 
 
@@ -102,9 +124,11 @@ def main(start_date='2017-01-01', end_date=date.today()):
 
     logging.info('Starting to clean records')
     ALL_DATA = clean_records(ALL_DATA, start_date, end_date)
+    logging.info('Starting to format report')
+    ALL_DATA = format(ALL_DATA)
     report_name = 'wac_monthly_report-{}.xlsx'.format(end_date)
     logging.info('Writing {} to the output directory'.format(report_name))
-    ALL_DATA.to_excel(os.path.join('./output/', report_name))
+    ALL_DATA.to_excel(os.path.join('./output/', report_name), index_label='ID')
 
 
 if __name__ == '__main__':
