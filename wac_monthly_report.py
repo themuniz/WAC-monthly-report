@@ -41,7 +41,8 @@ def setup(directories):
 
 def clean_records(data_frame, start_date, end_date):
     """Remove records with missing/invalid dates, dates outside of month,
-    and incorrect columns"""
+    and select/order columns"""
+    # Remove records with missing/invalid dates
     null_dates = data_frame[data_frame['Contact Date'].isnull()]
     for index, row in null_dates.iterrows():
         logging.warning('Empty contact date in record {}/{}'
@@ -55,9 +56,18 @@ def clean_records(data_frame, start_date, end_date):
                         .format(index, row['Student Name']))
         logging.info('Removing invalid record')
         data_frame = data_frame.drop(index, axis='rows')
+    # Convert strings to dates
     logging.info('Converting dates')
     data_frame['Contact Date'] = pd.to_datetime(
         data_frame['Contact Date'], infer_datetime_format=True)
+    # Begin text processing
+    data_frame['Student'] = data_frame['Student'].str.strip()
+    data_frame[['Content/Topic of the Exchange',
+                'Actions and/or Follow up']] = data_frame[[
+                    'Content/Topic of the Exchange', 'Actions and/or Follow up'
+                ]].fillna('')
+    df['Content/Topic of the Exchange'] = df[
+        'Content/Topic of the Exchange'].str.replace('same as above', '')
     logging.info(
         'Selecting dates between {} and {}'.format(start_date, end_date))
     data_frame = data_frame[(data_frame['Contact Date'] >= start_date) &
@@ -87,11 +97,9 @@ def format(data_frame):
         'Professor (only last name)':
         'Professor',
     })
-    data_frame['Student'] = data_frame['Student'].str.strip()
-    # TODO: Remove "Same as above" comments
     data_frame = data_frame[[
         'Contact Date', 'Student', 'Student Contact Info', 'Major', 'Course',
-        'Professor (only last name)', 'Writing Fellow', 'Type of contact',
+        'Professor', 'Writing Fellow', 'Type of contact',
         'Content/Topic of the Exchange', 'Actions and/or Follow up'
     ]]
     return data_frame
