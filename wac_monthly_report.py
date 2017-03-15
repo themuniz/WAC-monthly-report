@@ -22,10 +22,10 @@ CONTACT_FILE = glob.glob('./data/*.xlsx')
 def setup(directories):
     """Check if necessary directories exist and create them if needed"""
     logging.info('Starting setup')
-    for d in directories:
-        d = os.path.join('./', d)
-        if not os.path.exists(d):
-            os.makedirs(os.path.join(d))
+    for directory in directories:
+        directory = os.path.join('./', directory)
+        if not os.path.exists(directory):
+            os.makedirs(os.path.join(directory))
 
     if len(CONTACT_FILE) == 1:
         pass
@@ -42,6 +42,7 @@ def setup(directories):
 def clean_records(data_frame, start_date, end_date):
     """Remove records with missing/invalid dates, dates outside of month,
     and select/order columns"""
+
     # Remove records with missing/invalid dates
     null_dates = data_frame[data_frame['Contact Date'].isnull()]
     for index, row in null_dates.iterrows():
@@ -56,22 +57,27 @@ def clean_records(data_frame, start_date, end_date):
                         .format(index, row['Student Name']))
         logging.info('Removing invalid record')
         data_frame = data_frame.drop(index, axis='rows')
+
     # Convert strings to dates
     logging.info('Converting dates')
     data_frame['Contact Date'] = pd.to_datetime(
         data_frame['Contact Date'], infer_datetime_format=True)
+
     # Begin text processing
-    data_frame['Student'] = data_frame['Student'].str.strip()
+    data_frame['Student Name'] = data_frame['Student Name'].str.strip()
     data_frame[['Content/Topic of the Exchange',
                 'Actions and/or Follow up']] = data_frame[[
                     'Content/Topic of the Exchange', 'Actions and/or Follow up'
                 ]].fillna('')
-    df['Content/Topic of the Exchange'] = df[
+    data_frame['Content/Topic of the Exchange'] = data_frame[
         'Content/Topic of the Exchange'].str.replace('same as above', '')
+
+    # Filter by dates
     logging.info(
         'Selecting dates between {} and {}'.format(start_date, end_date))
     data_frame = data_frame[(data_frame['Contact Date'] >= start_date) &
                             (data_frame['Contact Date'] <= end_date)]
+
     logging.info(
         'Found {} interactions with {} students between {} and {}'.format(
             len(data_frame),
@@ -79,7 +85,7 @@ def clean_records(data_frame, start_date, end_date):
     return data_frame
 
 
-def format(data_frame):
+def format_report(data_frame):
     """Remove, rename, and re-order columns"""
     drop_cols = [x for x in data_frame.columns if '.1' in x]
     data_frame = data_frame.drop(drop_cols, axis='columns')
@@ -121,10 +127,10 @@ def main(start_date, end_date):
     logging.info('{} student worksheets found in {}'.format(
         len(sheets), CONTACT_FILE[0]))
 
-    for s in sheets:
-        df = pd.read_excel(CONTACT_FILE[0], sheetname=s)
-        logging.info('Reading worksheet {}'.format(s))
-        df['Student Name'] = s
+    for sheet in sheets:
+        df = pd.read_excel(CONTACT_FILE[0], sheetname=sheet)
+        logging.info('Reading worksheet {}'.format(sheet))
+        df['Student Name'] = sheet
         global ALL_DATA
         ALL_DATA = ALL_DATA.append(df, ignore_index=True)
 
@@ -134,7 +140,7 @@ def main(start_date, end_date):
     logging.info('Starting to clean records')
     ALL_DATA = clean_records(ALL_DATA, start_date, end_date)
     logging.info('Starting to format report')
-    ALL_DATA = format(ALL_DATA)
+    ALL_DATA = format_report(ALL_DATA)
     # TODO: Rename report to describe dates of query
     report_name = 'wac_monthly_report-{}.xlsx'.format(end_date)
     logging.info('Writing {} to the output directory'.format(report_name))
@@ -142,25 +148,24 @@ def main(start_date, end_date):
 
 
 if __name__ == '__main__':
-    # TODO: Add file logger and simplify formatter
     logger = logging.getLogger()
     logger.setLevel(logging.DEBUG)
     log_format = '%(asctime)s - %(levelname)-8s %(message)s'
 
-    handler = logging.StreamHandler()
-    handler.setLevel(logging.INFO)
-    formatter = logging.Formatter(log_format)
-    handler.setFormatter(formatter)
-    logger.addHandler(handler)
+    s_handler = logging.StreamHandler()
+    s_handler.setLevel(logging.INFO)
+    s_formatter = logging.Formatter(log_format)
+    s_handler.setFormatter(formatter)
+    logger.addHandler(s_handler)
 
-    handler = logging.FileHandler(
+    f_handler = logging.FileHandler(
         'report_log-{}.txt'.format(datetime.date.today()),
         encoding='utf-8',
         delay='true')
-    handler.setLevel(logging.WARNING)
-    formatter = logging.Formatter(log_format)
-    handler.setFormatter(formatter)
-    logger.addHandler(handler)
+    f_handler.setLevel(logging.WARNING)
+    f_formatter = logging.Formatter(log_format)
+    f_handler.setFormatter(formatter)
+    logger.addHandler(f_handler)
 
     parser = argparse.ArgumentParser(
         description="""Create an excel document with the WAC student interactions
