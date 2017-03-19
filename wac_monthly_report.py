@@ -80,7 +80,7 @@ class InteractionData(object):
         logging.info('{} interactions found in {}'.format(
             len(self.data), self.contact_file))
 
-    def clean_records():
+    def clean_records(self):
         """Remove records with missing/invalid dates, dates outside of month,
         and select/order columns"""
 
@@ -106,15 +106,20 @@ class InteractionData(object):
             self.data['Contact Date'], infer_datetime_format=True)
 
         # Begin text processing
-        self.data['Student Name'] = self.data['Student Name'].str.strip()
+        self.data['Student Name'] = self.data[
+            'Student Name'].str.strip().str.title()
         self.data[[
             'Content/Topic of the Exchange', 'Actions and/or Follow up'
         ]] = self.data[[
             'Content/Topic of the Exchange', 'Actions and/or Follow up'
         ]].fillna('')
         self.data['Content/Topic of the Exchange'] = self.data[
-            'Content/Topic of the Exchange'].str.replace('same as above', '')
-
+            'Content/Topic of the Exchange'].str.strip().str.replace(
+                'same as above', '')
+        self.data['Assigned to Writing Fellow'] = self.data[
+            'Assigned to Writing Fellow'].str.strip().str.title()
+        self.data['Correspondence Method'] = self.data[
+            'Correspondence Method'].str.title().str.strip()
         # Filter by dates
         logging.info('Selecting dates between {} and {}'.format(
             self.start_date, self.end_date))
@@ -144,7 +149,7 @@ class Report(object):
         self.end_date = end_date
         self.data = data
 
-    def format_report():
+    def format_report(self):
         """Remove, rename, and re-order columns"""
 
         logging.info('Starting to format report')
@@ -173,12 +178,17 @@ class Report(object):
             'Content/Topic of the Exchange', 'Actions and/or Follow up'
         ]]
 
-    def save_report():
-        """Save data to excel"""
-        report_name = 'wac_monthly_report-{}.xlsx'.format(end_date)
-        logging.info('Writing {} to the output directory'.format(report_name))
-        self.data.to_excel(
-            os.path.join('./output/', report_name), index_label='ID')
+    def save_report(self, report_type='excel'):
+        """Save data as report_type"""
+        report_name = 'wac_monthly_report-{}'.format(self.end_date)
+        if report_type == 'json':
+            self.data.to_json(
+                './output/{}.json'.format(report_name), date_format='iso')
+        else:
+            self.data.to_excel(
+                os.path.join('./output/{}.xlsx', report_name),
+                index_label='ID')
+        logging.info('Report written to the output directory')
 
 
 def main(start_date, end_date):
@@ -190,10 +200,11 @@ def main(start_date, end_date):
 
     interactions = InteractionData(
         start_date=start_date, end_date=end_date, contact_file=contact_file)
-
-    data = interactions.collect_data().clean_records()
-    report = Report(end_date=interactions.end_date, data=data)
-    report.format_report().save_report()
+    interactions.collect_data()
+    interactions.clean_records()
+    report = Report(end_date=interactions.end_date, data=interactions.data)
+    report.format_report()
+    report.save_report()
 
 
 if __name__ == '__main__':

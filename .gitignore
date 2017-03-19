@@ -2,3 +2,5 @@
 *.xlsx
 
 report_log-*.txt
+
+*.json
