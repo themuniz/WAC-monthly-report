@@ -1,0 +1,6 @@
+name: wac_monthly_report
+channels: !!python/tuple
+- conda-forge
+- defaults
+prefix: /Users/jmuniz/anaconda/envs/wac_monthly_report
+
