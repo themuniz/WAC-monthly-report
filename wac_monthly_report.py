@@ -104,6 +104,7 @@ class InteractionData(object):
         logging.info('Converting dates')
         self.data['Contact Date'] = pd.to_datetime(
             self.data['Contact Date'], infer_datetime_format=True)
+        self.data['Contact Date'] = self.data['Contact Date'].dt.date
 
         # Begin text processing
         self.data['Student Name'] = self.data[
@@ -186,8 +187,7 @@ class Report(object):
                 './output/{}.json'.format(report_name), date_format='iso')
         else:
             self.data.to_excel(
-                os.path.join('./output/{}.xlsx', report_name),
-                index_label='ID')
+                os.path.join('{}.xlsx'.format(report_name)), index_label='ID')
         logging.info('Report written to the output directory')
 
 
