@@ -35,10 +35,10 @@ Additionally, you should download the contact log (as an excel file) from Google
 ## Details
 
 -   Open the windows command-line and move to the script directory
--   Type `python wac_monthly_report.py 2017-03-01 2017-03-31` this will run the script against the contact log in the data directory for the dates starting 2017-03-01 to 2017-03-31
+-   Type `python wac_monthly_report.py 2017-03-01 2017-03-31` this will run the script against the contact log in the data directory for the dates starting 2017-03-01 and ending 2017-03-31
     -   These dates are _inclusive_, and will pull records with a contact date between and _including_ 01 March and 31 March
-    -   Once the script has completed running (it may take several minutes, the script will say that the report was written), then remove the contact log from the data directory
+    -   Once the script has completed (it may take several minutes, the script will say that the report was written), then remove the contact log from the data directory
 -   The script will display messages on screen. Messages marked 'INFO' detail the script's normal operation; messages marked 'WARNING', 'ERROR', or 'CRITICAL' detail problems that should be investigated. Non-info messages are also recorded in the report log for the date that the script is run, so you can check on the issue.
     -   WARNING messages are for data related issues, and will report the worksheet that the error occurred, and a record ID. Please review the issue on the Google sheet, and if changes are made, re-download the file and restart the process.
     -   ERROR and CRITICAL messages are for technical issues. If you can't resolve the issue, please contact José Muñiz for technical support.
--   Once the script is finished, it will display `Writing FILENAME to the output directory`, where FILENAME is the name of the excel file. Send the file to Susan Ko, and remember to remove the contact log from the data directory.
+-   Once the script is finished, it will display `Report written to the output directory`, where FILENAME is the name of the excel file. Send the file to Susan Ko, and remember to remove the contact log from the data directory.
