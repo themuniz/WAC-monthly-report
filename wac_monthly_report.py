@@ -150,7 +150,7 @@ class Report(object):
         self.data = data
 
     def format_report(self):
-        """Remove, rename, and re-order columns"""
+        """Remove, rename, and re-order columns and remove time from date"""
 
         logging.info('Starting to format report')
         logging.info('Dropping duplicate columns')
@@ -171,6 +171,7 @@ class Report(object):
             'Professor (only last name)':
             'Professor',
         })
+        self.data['Contact Date'] = self.data['Contact Date'].dt.date
         logging.info('Selecting and ordering columns')
         self.data = self.data[[
             'Contact Date', 'Student', 'Student Contact Info', 'Major',
