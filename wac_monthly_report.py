@@ -186,8 +186,7 @@ class Report(object):
                 './output/{}.json'.format(report_name), date_format='iso')
         else:
             self.data.to_excel(
-                os.path.join('./output/{}.xlsx', report_name),
-                index_label='ID')
+                './output/{}.xlsx'.format(report_name), index_label='ID')
         logging.info('Report written to the output directory')
 
 
