@@ -195,7 +195,7 @@ class Report(object):
         logging.info('Report written to the output directory')
 
     def post_processing(self, report_file, report_config):
-        """Add report information to headers and footers of excel reports"""
+        """Set excel formatting"""
         wb = openpyxl.load_workbook(report_file)
         ws = wb.active
         ws.oddHeader.center.text = report_config[0]
@@ -203,6 +203,7 @@ class Report(object):
         ws.oddHeader.center.size = report_config[2]
         ws.oddFooter.left.font = report_config[1]
         ws.oddFooter.left.text = 'Generated: {}'.format(report_config[3])
+        # TODO: Repeat col heads on each page, change to landscape orientation
         wb.save(report_file)
         logging.info('Report post-processing completed')
 
