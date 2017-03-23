@@ -104,7 +104,6 @@ class InteractionData(object):
         logging.info('Converting dates')
         self.data['Contact Date'] = pd.to_datetime(
             self.data['Contact Date'], infer_datetime_format=True)
-        self.data['Contact Date'] = self.data['Contact Date'].dt.date
 
         # Begin text processing
         self.data['Student Name'] = self.data[
