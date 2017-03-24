@@ -148,7 +148,7 @@ class Report(object):
         self.data = data
         self.report_title = report_title
         self.report_config = [
-            self.report_title, 'Source Sans Pro Regular', 16,
+            self.report_title, 'Source Sans Pro Regular', 14,
             self.date_generated
         ]
 
@@ -203,7 +203,8 @@ class Report(object):
         ws.oddHeader.center.size = report_config[2]
         ws.oddFooter.left.font = report_config[1]
         ws.oddFooter.left.text = 'Generated: {}'.format(report_config[3])
-        # TODO: Repeat col heads on each page, change to landscape orientation
+        ws.print_title_rows = '1:1'
+        ws.page_setup.orientation = ws.ORIENTATION_LANDSCAPE
         wb.save(report_file)
         logging.info('Report post-processing completed')
 
