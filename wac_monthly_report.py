@@ -137,17 +137,20 @@ class Report(object):
     """Represents a WAC student interaction report.
 
     Attributes:
-        end_date: A string representing the date of the last (inclusive)
-        interaction to be collected
         data: A dataframe containing interactions to be reported
+        report_title: A string representing the title of the report
     """
 
-    def __init__(self, end_date, data):
+    def __init__(self, data, report_title):
         """Return a Report object"""
 
-        self.date_generated = datetime.datetime.today()
-        self.end_date = end_date
+        self.date_generated = datetime.datetime.today().date()
         self.data = data
+        self.report_title = report_title
+        self.report_config = [
+            self.report_title, 'Source Sans Pro Regular', 14,
+            self.date_generated
+        ]
 
     def format_report(self):
         """Remove, rename, and re-order columns and remove time from date"""
@@ -181,14 +184,29 @@ class Report(object):
 
     def save_report(self, report_type='excel'):
         """Save data as report_type"""
-        report_name = 'wac_monthly_report-{}'.format(self.end_date)
+        report_name = 'wac_monthly_report-{}'.format(self.report_config[3])
         if report_type == 'json':
             self.data.to_json(
                 './output/{}.json'.format(report_name), date_format='iso')
         else:
-            self.data.to_excel(
-                './output/{}.xlsx'.format(report_name), index_label='ID')
+            report_file = './output/{}.xlsx'.format(report_name)
+            self.data.to_excel(report_file, index_label='ID')
+            self.post_processing(report_file, self.report_config)
         logging.info('Report written to the output directory')
+
+    def post_processing(self, report_file, report_config):
+        """Set excel formatting"""
+        wb = openpyxl.load_workbook(report_file)
+        ws = wb.active
+        ws.oddHeader.center.text = report_config[0]
+        ws.oddHeader.center.font = report_config[1]
+        ws.oddHeader.center.size = report_config[2]
+        ws.oddFooter.left.font = report_config[1]
+        ws.oddFooter.left.text = 'Generated: {}'.format(report_config[3])
+        ws.print_title_rows = '1:1'
+        ws.page_setup.orientation = ws.ORIENTATION_LANDSCAPE
+        wb.save(report_file)
+        logging.info('Report post-processing completed')
 
 
 def main(start_date, end_date):
@@ -202,7 +220,8 @@ def main(start_date, end_date):
         start_date=start_date, end_date=end_date, contact_file=contact_file)
     interactions.collect_data()
     interactions.clean_records()
-    report = Report(end_date=interactions.end_date, data=interactions.data)
+    report = Report(interactions.data,
+                    "WAC Fellows's Student Interactions Monthly Report")
     report.format_report()
     report.save_report()
 
