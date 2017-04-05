@@ -86,24 +86,31 @@ class InteractionData(object):
 
         logging.info('Starting to clean records')
         # Remove records with missing/invalid dates
-        null_dates = self.data[self.data['Contact Date'].isnull()]
-        for index, row in null_dates.iterrows():
-            logging.warning('Empty contact date in record {}/{}'
-                            .format(index, row['Student Name']))
-        self.data = self.data[pd.notnull(self.data['Contact Date'])]
-        string_pattern = r'[A-Z][a-z]'
-        string_dates = self.data[self.data['Contact Date']
-                                 .str.match(string_pattern, na=False)]
-        for index, row in string_dates.iterrows():
-            logging.warning('Invalid information in record {}/{}'
-                            .format(index, row['Student Name']))
-            logging.info('Removing invalid record')
-            self.data = self.data.drop(index, axis='rows')
+        # null_dates = self.data[self.data['Contact Date'].isnull()]
+        # for index, row in null_dates.iterrows():
+        #     logging.warning('Empty contact date in record {}/{}'
+        #                     .format(index, row['Student Name']))
+        # self.data = self.data[pd.notnull(self.data['Contact Date'])]
+        # string_pattern = r'[A-Z][a-z]'
+        # string_dates = self.data[self.data['Contact Date']
+        #                          .str.match(string_pattern, na=False)]
+        # for index, row in string_dates.iterrows():
+        #     logging.warning('Invalid information in record {}/{}'
+        #                     .format(index, row['Student Name']))
+        #     logging.info('Removing invalid record')
+        #     self.data = self.data.drop(index, axis='rows')
 
         # Convert strings to dates
         logging.info('Converting dates')
         self.data['Contact Date'] = pd.to_datetime(
-            self.data['Contact Date'], infer_datetime_format=True)
+            self.data['Contact Date'], infer_datetime_format=True,
+            errors='coerce')
+
+        # Log and remove NaT
+        null_dates = self.data[self.data['Contact Date'].isnull()]
+        for index, row in null_dates.iterrows():
+            logging.warning('Invalid contact date in record {}/{}'
+                            .format(index, row['Student Name']))
 
         # Begin text processing
         self.data['Student Name'] = self.data[
@@ -251,11 +258,11 @@ if __name__ == '__main__':
         for a given period of time""")
     parser.add_argument(
         '--start_date',
-        default='2017-01-01',
+        default='2017-03-01',
         help='Date (inclusive) of the first interaction: YYYY-MM-DD')
     parser.add_argument(
         '--end_date',
-        default='2017-03-01',
+        default='2017-03-31',
         help='Date (inclusive) of the last interaction: YYYY-MM-DD')
     args = parser.parse_args()
     main(args.start_date, args.end_date)
